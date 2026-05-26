@@ -65,6 +65,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
+    @ExceptionHandler(JobStatusTransitionException.class)
+    public ResponseEntity<Map<String, String>> handleJobStatusTransition(JobStatusTransitionException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(JobOwnershipException.class)
+    public ResponseEntity<Map<String, String>> handleJobOwnership(JobOwnershipException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidJobCriteriaException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidJobCriteria(InvalidJobCriteriaException ex) {
+        return ResponseEntity.badRequest()
+                .body(Map.of("error", ex.getMessage()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGeneric(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
