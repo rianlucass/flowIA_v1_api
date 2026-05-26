@@ -53,7 +53,7 @@ public class User implements UserDetails {
     private UserRole role;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     public User(String email, String password, String username, String name, UserRole role) {
