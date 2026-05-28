@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.br.rianlucas.flowia_api.domain.user.User;
-import com.br.rianlucas.flowia_api.dtos.UserResponseDTO;
+import com.br.rianlucas.flowia_api.dtos.user.UserResponseDTO;
 
 @RestController
 @RequestMapping("/users")

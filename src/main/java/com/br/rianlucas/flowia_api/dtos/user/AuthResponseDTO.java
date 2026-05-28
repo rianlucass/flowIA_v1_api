@@ -1,4 +1,4 @@
-package com.br.rianlucas.flowia_api.dtos;
+package com.br.rianlucas.flowia_api.dtos.user;
 
 import com.br.rianlucas.flowia_api.domain.user.UserRole;
 

@@ -1,4 +1,4 @@
-package com.br.rianlucas.flowia_api.dtos;
+package com.br.rianlucas.flowia_api.dtos.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

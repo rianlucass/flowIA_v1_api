@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.br.rianlucas.flowia_api.domain.user.User;
 import com.br.rianlucas.flowia_api.domain.user.UserRole;
-import com.br.rianlucas.flowia_api.dtos.AuthResponseDTO;
-import com.br.rianlucas.flowia_api.dtos.LoginRequestDTO;
-import com.br.rianlucas.flowia_api.dtos.RegisterRequestDTO;
-import com.br.rianlucas.flowia_api.dtos.UserResponseDTO;
+import com.br.rianlucas.flowia_api.dtos.user.AuthResponseDTO;
+import com.br.rianlucas.flowia_api.dtos.user.LoginRequestDTO;
+import com.br.rianlucas.flowia_api.dtos.user.RegisterRequestDTO;
+import com.br.rianlucas.flowia_api.dtos.user.UserResponseDTO;
 import com.br.rianlucas.flowia_api.infra.exceptions.EmailAlreadyExistsException;
 import com.br.rianlucas.flowia_api.infra.exceptions.UsernameAlreadyExistsException;
 import com.br.rianlucas.flowia_api.repositories.UserRepository;
