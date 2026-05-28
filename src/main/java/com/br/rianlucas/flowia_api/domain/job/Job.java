@@ -1,6 +1,7 @@
 package com.br.rianlucas.flowia_api.domain.job;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -16,6 +17,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -23,6 +25,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import com.br.rianlucas.flowia_api.domain.candidates.Candidate;
 import com.br.rianlucas.flowia_api.domain.user.User;
 
 @Entity
@@ -70,6 +73,9 @@ public class Job {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private JobCriteria criteria;
+
+    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
+    private List<Candidate> candidates;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
