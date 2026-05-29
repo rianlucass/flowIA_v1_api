@@ -1,16 +1,24 @@
 package com.br.rianlucas.flowia_api.services;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.br.rianlucas.flowia_api.domain.analysis.ResumeAnalysis;
+import com.br.rianlucas.flowia_api.domain.analysis.AnalysisStatus;
+import com.br.rianlucas.flowia_api.domain.analysis.CandidateAnalysis;
 import com.br.rianlucas.flowia_api.domain.candidates.Candidate;
+import com.br.rianlucas.flowia_api.domain.candidates.CandidateStatus;
 import com.br.rianlucas.flowia_api.domain.job.Job;
-import com.br.rianlucas.flowia_api.dtos.analysis.CreateResumeAnalysisRequestDTO;
-import com.br.rianlucas.flowia_api.dtos.analysis.ResumeAnalysisResponseDTO;
+import com.br.rianlucas.flowia_api.domain.user.User;
+import com.br.rianlucas.flowia_api.dtos.analysis.CandidateAnalysisResponseDTO;
+import com.br.rianlucas.flowia_api.dtos.analysis.CreateCandidateAnalysisRequestDTO;
+import com.br.rianlucas.flowia_api.infra.exceptions.CandidateNotFoundException;
+import com.br.rianlucas.flowia_api.infra.exceptions.JobNotFoundException;
+import com.br.rianlucas.flowia_api.infra.exceptions.JobOwnershipException;
+import com.br.rianlucas.flowia_api.repositories.CandidateAnalysisRepository;
 import com.br.rianlucas.flowia_api.repositories.CandidateRepository;
 import com.br.rianlucas.flowia_api.repositories.JobRepository;
-import com.br.rianlucas.flowia_api.repositories.ResumeAnalysisRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -18,7 +26,7 @@ import jakarta.transaction.Transactional;
 public class AnalysisService {
 
     @Autowired
-    private ResumeAnalysisRepository resumeAnalysisRepository;
+    private CandidateAnalysisRepository candidateAnalysisRepository;
 
     @Autowired
     private CandidateRepository candidateRepository;
@@ -27,14 +35,18 @@ public class AnalysisService {
     private JobRepository jobRepository;
 
     @Transactional
-    public ResumeAnalysisResponseDTO create(CreateResumeAnalysisRequestDTO data) {
+    public CandidateAnalysisResponseDTO create(CreateCandidateAnalysisRequestDTO data) {
         Candidate candidate = candidateRepository.findById(data.candidateId())
-                .orElseThrow(() -> new RuntimeException("Candidate not found: " + data.candidateId()));
+                .orElseThrow(() -> new CandidateNotFoundException(data.candidateId()));
 
         Job job = jobRepository.findById(data.jobId())
-                .orElseThrow(() -> new RuntimeException("Job not found: " + data.jobId()));
+                .orElseThrow(() -> new JobNotFoundException(data.jobId()));
 
-        ResumeAnalysis analysis = new ResumeAnalysis();
+        // Atualiza perfil do candidato com dados extraídos pelo AI
+        enrichCandidate(candidate, data);
+        candidateRepository.save(candidate);
+
+        CandidateAnalysis analysis = new CandidateAnalysis();
         analysis.setCandidate(candidate);
         analysis.setJob(job);
         analysis.setFinalScore(data.finalScore());
@@ -51,23 +63,61 @@ public class AnalysisService {
         analysis.setRecommendation(data.recommendation());
         analysis.setValidations(data.validations());
         analysis.setWeightsUsed(data.weightsUsed());
+        analysis.setEliminationReasons(data.eliminationReasons());
         analysis.setAiModel(data.aiModel());
         analysis.setPromptVersion(data.promptVersion());
         analysis.setOutdated(data.outdated() != null ? data.outdated() : false);
 
-        ResumeAnalysis saved = resumeAnalysisRepository.save(analysis);
+        CandidateAnalysis saved = candidateAnalysisRepository.save(analysis);
         return toDTO(saved);
     }
 
-    public ResumeAnalysisResponseDTO getCandidatesAnalysisByJobId(String jobId) {
-        var analysis = resumeAnalysisRepository.findFirstByJobId(jobId)
-                .orElseThrow(() -> new RuntimeException("No analysis found for job ID: " + jobId));
+    // Preenche os campos do candidato com dados extraídos pelo AI.
+    // Ignora valores nulos ou o placeholder "informação não encontrada".
+    private void enrichCandidate(Candidate candidate, CreateCandidateAnalysisRequestDTO data) {
+        if (isPresent(data.candidateName()))  candidate.setName(data.candidateName());
+        if (isPresent(data.email()))          candidate.setEmail(data.email());
+        if (isPresent(data.phone()))          candidate.setPhone(data.phone());
+        if (isPresent(data.city()))           candidate.setCity(data.city());
+        if (isPresent(data.state()))          candidate.setState(data.state());
+        if (isPresent(data.linkedinUrl()))    candidate.setLinkedinUrl(data.linkedinUrl());
+        if (isPresent(data.portfolioUrl()))   candidate.setPortfolioUrl(data.portfolioUrl());
+
+        candidate.setProcessedByAi(true);
+
+        // Sincroniza status do candidato com o resultado da análise
+        if (data.status() == AnalysisStatus.APPROVED)   candidate.setStatus(CandidateStatus.APPROVED);
+        else if (data.status() == AnalysisStatus.REJECTED) candidate.setStatus(CandidateStatus.REJECTED);
+        else if (data.status() == AnalysisStatus.REVIEW)   candidate.setStatus(CandidateStatus.REVIEW);
+    }
+
+    private boolean isPresent(String value) {
+        return value != null && !value.isBlank() && !value.equalsIgnoreCase("informação não encontrada");
+    }
+
+    public CandidateAnalysisResponseDTO getAnalysisByJobId(String jobId) {
+        var analysis = candidateAnalysisRepository.findFirstByJobId(jobId)
+                .orElseThrow(() -> new JobNotFoundException(jobId));
 
         return toDTO(analysis);
     }
 
-    private ResumeAnalysisResponseDTO toDTO(ResumeAnalysis analysis) {
-        return new ResumeAnalysisResponseDTO(
+    public List<CandidateAnalysisResponseDTO> getAllAnalysisByJobId(String jobId, User requester) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new JobNotFoundException(jobId));
+
+        if (!job.getRecruiter().getId().equals(requester.getId())) {
+            throw new JobOwnershipException();
+        }
+
+        return candidateAnalysisRepository.findByJobId(jobId)
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    private CandidateAnalysisResponseDTO toDTO(CandidateAnalysis analysis) {
+        return new CandidateAnalysisResponseDTO(
                 analysis.getId(),
                 analysis.getCandidate().getId(),
                 analysis.getJob().getId(),
@@ -85,6 +135,7 @@ public class AnalysisService {
                 analysis.getRecommendation(),
                 analysis.getValidations(),
                 analysis.getWeightsUsed(),
+                analysis.getEliminationReasons(),
                 analysis.getAiModel(),
                 analysis.getPromptVersion(),
                 analysis.getOutdated(),

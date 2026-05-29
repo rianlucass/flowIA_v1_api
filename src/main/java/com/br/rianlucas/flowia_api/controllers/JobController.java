@@ -1,5 +1,7 @@
 package com.br.rianlucas.flowia_api.controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +35,11 @@ public class JobController {
             @AuthenticationPrincipal User recruiter) {
         JobResponseDTO response = jobService.create(data, recruiter);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<JobResponseDTO>> getMyJobs(@AuthenticationPrincipal User recruiter) {
+        return ResponseEntity.ok(jobService.getByRecruiter(recruiter));
     }
 
     @GetMapping("/{id}")

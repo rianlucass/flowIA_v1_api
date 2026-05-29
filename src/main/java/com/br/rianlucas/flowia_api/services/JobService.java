@@ -28,6 +28,13 @@ public class JobService {
     private JobRepository jobRepository;
 
 
+    public List<JobResponseDTO> getByRecruiter(User recruiter) {
+        return jobRepository.findByRecruiterId(recruiter.getId())
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
     @Transactional
     public JobResponseDTO update(String id, UpdateJobRequestDTO data, User recruiter) {
         Job job = jobRepository.findById(id)

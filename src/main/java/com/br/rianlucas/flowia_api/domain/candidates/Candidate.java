@@ -35,10 +35,10 @@ public class Candidate {
     @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String name;
 
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String email;
 
     @Column(columnDefinition = "TEXT")
@@ -59,7 +59,7 @@ public class Candidate {
     @Column(columnDefinition = "TEXT")
     private String resumeUrl;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition = "TEXT")
     private String resumeText;
 
     @Enumerated(EnumType.STRING)
