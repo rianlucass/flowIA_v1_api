@@ -4,6 +4,8 @@ public enum AnalysisStatus {
     PENDING,
     IN_PROGRESS,
     COMPLETED,
+    APPROVED,
+    REVIEW,
     FAILED,
     REJECTED
 }
