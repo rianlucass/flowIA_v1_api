@@ -51,9 +51,6 @@ public class Job {
     @JoinColumn(name = "recruiter_id", nullable = false)
     private User recruiter;
 
-    @Column(name = "company_id", nullable = false)
-    private String companyId;
-
     @Column(nullable = false)
     private String modality;
 

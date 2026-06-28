@@ -2,7 +2,6 @@ package com.br.rianlucas.flowia_api.controllers;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,13 +19,14 @@ import com.br.rianlucas.flowia_api.dtos.analysis.CreateCandidateAnalysisRequestD
 import com.br.rianlucas.flowia_api.services.AnalysisService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/analysis")
+@RequiredArgsConstructor
 public class CandidateAnalysisController {
 
-    @Autowired
-    private AnalysisService analysisService;
+    private final AnalysisService analysisService;
 
     @PostMapping
     public ResponseEntity<CandidateAnalysisResponseDTO> create(@RequestBody @Valid CreateCandidateAnalysisRequestDTO data) {

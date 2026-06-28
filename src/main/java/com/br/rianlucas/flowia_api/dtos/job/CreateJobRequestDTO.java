@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotNull;
 public record CreateJobRequestDTO(
         @NotBlank String title,
         @NotBlank String description,
-        @NotBlank String companyId,
         @NotBlank String modality,
         String salary,
         String city,

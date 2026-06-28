@@ -8,6 +8,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.br.rianlucas.flowia_api.dtos.ocr.OcrResponseDTO;
+import com.br.rianlucas.flowia_api.infra.exceptions.OcrServiceException;
 
 @Service
 public class OcrService {
@@ -29,6 +30,10 @@ public class OcrService {
                 .retrieve()
                 .bodyToMono(OcrResponseDTO.class)
                 .block();
+
+        if (response == null) {
+            throw new OcrServiceException("OCR service returned null response");
+        }
 
         return response.text();
     }

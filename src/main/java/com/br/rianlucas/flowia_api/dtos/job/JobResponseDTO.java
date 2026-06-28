@@ -11,8 +11,6 @@ public record JobResponseDTO(
 
     String recruiterId,
 
-    String companyId,
-
     String title,
 
     String description,

@@ -10,6 +10,9 @@ import com.br.rianlucas.flowia_api.domain.analysis.AnalysisStatus;
 public record CandidateAnalysisResponseDTO(
     String id,
     String candidateId,
+    String candidateName,
+    String email,
+    String phone,
     String jobId,
     BigDecimal finalScore,
     BigDecimal activitiesScore,

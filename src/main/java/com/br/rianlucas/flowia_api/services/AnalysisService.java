@@ -2,7 +2,6 @@ package com.br.rianlucas.flowia_api.services;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.br.rianlucas.flowia_api.domain.analysis.AnalysisStatus;
@@ -21,18 +20,17 @@ import com.br.rianlucas.flowia_api.repositories.CandidateRepository;
 import com.br.rianlucas.flowia_api.repositories.JobRepository;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class AnalysisService {
 
-    @Autowired
-    private CandidateAnalysisRepository candidateAnalysisRepository;
+    private final CandidateAnalysisRepository candidateAnalysisRepository;
 
-    @Autowired
-    private CandidateRepository candidateRepository;
+    private final CandidateRepository candidateRepository;
 
-    @Autowired
-    private JobRepository jobRepository;
+    private final JobRepository jobRepository;
 
     @Transactional
     public CandidateAnalysisResponseDTO create(CreateCandidateAnalysisRequestDTO data) {
@@ -66,7 +64,7 @@ public class AnalysisService {
         analysis.setEliminationReasons(data.eliminationReasons());
         analysis.setAiModel(data.aiModel());
         analysis.setPromptVersion(data.promptVersion());
-        analysis.setOutdated(data.outdated() != null ? data.outdated() : false);
+        analysis.setOutdated(data.outdated() != null && data.outdated());
 
         CandidateAnalysis saved = candidateAnalysisRepository.save(analysis);
         return toDTO(saved);
@@ -120,6 +118,9 @@ public class AnalysisService {
         return new CandidateAnalysisResponseDTO(
                 analysis.getId(),
                 analysis.getCandidate().getId(),
+                analysis.getCandidate().getName(),
+                analysis.getCandidate().getEmail(),
+                analysis.getCandidate().getPhone(),
                 analysis.getJob().getId(),
                 analysis.getFinalScore(),
                 analysis.getActivitiesScore(),

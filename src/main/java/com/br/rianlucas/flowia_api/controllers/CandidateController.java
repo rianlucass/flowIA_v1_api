@@ -2,7 +2,6 @@ package com.br.rianlucas.flowia_api.controllers;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,16 +20,16 @@ import com.br.rianlucas.flowia_api.services.CandidatesService;
 import com.br.rianlucas.flowia_api.services.OcrService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/candidates")
+@RequiredArgsConstructor
 public class CandidateController {
 
-    @Autowired
-    private CandidatesService candidatesService;
+    private final CandidatesService candidatesService;
 
-    @Autowired
-    private OcrService ocrService;
+    private final OcrService ocrService;
 
     @PostMapping
     public ResponseEntity<CandidateResponseDTO> create(@RequestBody @Valid CreateCandidateRequestDTO data) {

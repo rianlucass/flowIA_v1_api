@@ -75,8 +75,6 @@ public class JobCriteria {
 
         private Boolean requiredDegree;
 
-        private Integer maxDistanceKm;
-
         private Integer minimumExperienceYears;
 
         private String requiredSchedule;

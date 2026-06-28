@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,26 +19,23 @@ import com.br.rianlucas.flowia_api.repositories.CandidateRepository;
 import com.br.rianlucas.flowia_api.repositories.JobRepository;
 
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class CandidatesService {
 
     private static final Logger log = LoggerFactory.getLogger(CandidatesService.class);
 
-    @Autowired
-    private CandidateRepository candidateRepository;
+    private final CandidateRepository candidateRepository;
 
-    @Autowired
-    private JobRepository jobRepository;
+    private final JobRepository jobRepository;
 
-    @Autowired
-    private FileStorageService fileStorageService;
+    private final FileStorageService fileStorageService;
 
-    @Autowired
-    private OcrService ocrService;
+    private final OcrService ocrService;
 
-    @Autowired
-    private N8NWebhookService n8nWebhookService;
+    private final N8NWebhookService n8nWebhookService;
 
     public List<CandidateResponseDTO> getCandidatesByJobId(String jobId) {
         return candidateRepository.findByJobId(jobId)
@@ -115,7 +111,7 @@ public class CandidatesService {
         candidate.setResumeUrl(data.resumeUrl());
         candidate.setResumeText(data.resumeText());
         candidate.setStatus(data.status() != null ? data.status() : CandidateStatus.RECEIVED);
-        candidate.setProcessedByAi(data.processedByAi() != null ? data.processedByAi() : false);
+        candidate.setProcessedByAi(data.processedByAi() != null && data.processedByAi());
 
         return toDTO(candidateRepository.save(candidate));
     }

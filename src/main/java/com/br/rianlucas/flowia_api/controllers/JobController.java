@@ -2,7 +2,6 @@ package com.br.rianlucas.flowia_api.controllers;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,18 +15,20 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.br.rianlucas.flowia_api.domain.user.User;
 import com.br.rianlucas.flowia_api.dtos.job.CreateJobRequestDTO;
+import com.br.rianlucas.flowia_api.dtos.job.JobPublicResponseDTO;
 import com.br.rianlucas.flowia_api.dtos.job.JobResponseDTO;
 import com.br.rianlucas.flowia_api.dtos.job.UpdateJobRequestDTO;
 import com.br.rianlucas.flowia_api.services.JobService;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/jobs")
+@RequiredArgsConstructor
 public class JobController {
 
-    @Autowired
-    private JobService jobService;
+    private final JobService jobService;
 
     @PostMapping
     public ResponseEntity<JobResponseDTO> create(
@@ -54,6 +55,27 @@ public class JobController {
             @RequestBody UpdateJobRequestDTO data,
             @AuthenticationPrincipal User recruiter) {
         JobResponseDTO response = jobService.update(id, data, recruiter);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * GET /jobs/{id}/public
+     * 
+     * Endpoint público (sem autenticação) para buscar informações de uma vaga.
+     * Usado pela página de candidatura pública.
+     * 
+     * Retorna apenas dados públicos:
+     * - title, description, modality, salary, city, state, status
+     * 
+     * NÃO retorna dados sensíveis:
+     * - recruiterId, companyId, criteria
+     * 
+     * @param id ID da vaga
+     * @return Dados públicos da vaga
+     */
+    @GetMapping("/{id}/public")
+    public ResponseEntity<JobPublicResponseDTO> getJobPublic(@PathVariable String id) {
+        JobPublicResponseDTO response = jobService.getJobPublic(id);
         return ResponseEntity.ok(response);
     }
 }

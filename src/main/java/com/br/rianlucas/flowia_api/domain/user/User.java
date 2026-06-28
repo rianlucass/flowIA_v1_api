@@ -57,7 +57,7 @@ public class User implements UserDetails {
     private UserRole role;
 
     @OneToMany(mappedBy = "recruiter", fetch = FetchType.LAZY)
-    private List<Job> jobs;
+    private transient List<Job> jobs;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

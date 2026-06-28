@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +12,7 @@ import com.br.rianlucas.flowia_api.domain.job.JobCriteria;
 import com.br.rianlucas.flowia_api.domain.job.JobStatus;
 import com.br.rianlucas.flowia_api.domain.user.User;
 import com.br.rianlucas.flowia_api.dtos.job.CreateJobRequestDTO;
+import com.br.rianlucas.flowia_api.dtos.job.JobPublicResponseDTO;
 import com.br.rianlucas.flowia_api.dtos.job.JobResponseDTO;
 import com.br.rianlucas.flowia_api.dtos.job.UpdateJobRequestDTO;
 import com.br.rianlucas.flowia_api.infra.exceptions.InvalidJobCriteriaException;
@@ -21,11 +21,13 @@ import com.br.rianlucas.flowia_api.infra.exceptions.JobOwnershipException;
 import com.br.rianlucas.flowia_api.infra.exceptions.JobStatusTransitionException;
 import com.br.rianlucas.flowia_api.repositories.JobRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class JobService {
 
-    @Autowired
-    private JobRepository jobRepository;
+    private final JobRepository jobRepository;
 
 
     public List<JobResponseDTO> getByRecruiter(User recruiter) {
@@ -44,14 +46,19 @@ public class JobService {
             throw new JobOwnershipException();
         }
 
+        validateUpdateRules(job, data);
+        applyPartialUpdate(job, data);
+
+        return toDTO(jobRepository.save(job));
+    }
+
+    private void validateUpdateRules(Job job, UpdateJobRequestDTO data) {
         JobStatus currentStatus = job.getStatus();
 
-        // Status transition validation
         if (data.status() != null && !data.status().equals(currentStatus)) {
             validateStatusTransition(currentStatus, data.status());
         }
 
-        // Criteria change rules
         if (data.criteria() != null) {
             if (currentStatus == JobStatus.CLOSED) {
                 throw new InvalidJobCriteriaException("Cannot change criteria of a CLOSED job");
@@ -59,12 +66,12 @@ public class JobService {
             validateWeightSum(data.criteria().getWeights());
         }
 
-        // Modality is a critical field — blocked for CLOSED jobs
         if (currentStatus == JobStatus.CLOSED && data.modality() != null) {
             throw new InvalidJobCriteriaException("Cannot change modality of a CLOSED job");
         }
+    }
 
-        // Partial update — preserve existing values when field is null
+    private void applyPartialUpdate(Job job, UpdateJobRequestDTO data) {
         if (data.title() != null)       job.setTitle(data.title());
         if (data.description() != null) job.setDescription(data.description());
         if (data.modality() != null)    job.setModality(data.modality());
@@ -76,15 +83,12 @@ public class JobService {
             job.setCriteria(data.criteria());
             job.setCriteriaUpdatedAt(LocalDateTime.now());
         }
-
-        return toDTO(jobRepository.save(job));
     }
 
     private JobResponseDTO toDTO(Job job) {
         return new JobResponseDTO(
                 job.getId(),
                 job.getRecruiter().getId(),
-                job.getCompanyId(),
                 job.getTitle(),
                 job.getDescription(),
                 job.getSalary(),
@@ -130,7 +134,6 @@ public class JobService {
         job.setRecruiter(recruiter);
         job.setTitle(data.title());
         job.setDescription(data.description());
-        job.setCompanyId(data.companyId());
         job.setModality(data.modality());
         job.setSalary(data.salary());
         job.setCity(data.city());
@@ -151,6 +154,22 @@ public class JobService {
     @Transactional(readOnly = true)
     public List<JobResponseDTO> getAll() {
         return jobRepository.findAll().stream().map(this::toDTO).toList();
+    }
+
+    /**
+     * Busca informações públicas de uma vaga (sem autenticação).
+     * Usado pela página pública de candidatura.
+     * 
+     * @param jobId ID da vaga
+     * @return Dados públicos da vaga
+     * @throws JobNotFoundException se a vaga não existir
+     */
+    @Transactional(readOnly = true)
+    public JobPublicResponseDTO getJobPublic(String jobId) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new JobNotFoundException(jobId));
+        
+        return JobPublicResponseDTO.fromEntity(job);
     }
 
 }
